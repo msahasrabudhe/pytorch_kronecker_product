@@ -66,6 +66,7 @@ class KroneckerProduct(nn.Module):
         """
         self.left_mat       = self.left_mat.cuda()
         self.right_mat      = self.right_mat.cuda()
+        return self
 
     def forward(self, A, B):
         """
