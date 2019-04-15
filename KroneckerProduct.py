@@ -7,6 +7,9 @@ class KroneckerProduct(nn.Module):
 
     See: https://en.wikipedia.org/wiki/Kronecker_product
 
+    Computes Kronecker Product for matrices A and B, where 
+    A has shape (batch_size, Ar, Ac) and B has shape (batch_size, Br, Bc)
+
     Usage: 
       * Initialise an instance of this class by specifying the shapes of A and B. 
       * OPTIONAL: If A and B are supposed to be cuda tensors, .cuda() for this class
@@ -16,8 +19,8 @@ class KroneckerProduct(nn.Module):
     def __init__(self, A_shape, B_shape):
         """
         Inputs: 
-            A_shape         A tuple of length 2 specifying the shape of matrix A
-            B_shape         A tuple of length 2 specifying the shape of matrix B
+            A_shape         A tuple of length 2 specifying the shape of A---(Ar, Ac)
+            B_shape         A tuple of length 2 specifying the shape of B---(Br, Bc)
         """
 
         super(KroneckerProduct, self).__init__()
@@ -33,32 +36,24 @@ class KroneckerProduct(nn.Module):
         left_mat_shape      = (Fr, Ar)
         # Shape for the right-multiplication matrix. 
         right_mat_shape     = (Ac, Fc)
-  
-        ratio_left          = Ar
-        ratio_right         = Ac
+ 
+        # Identity matrices for left and right matrices.
+        left_eye            = torch.eye(Ar)
+        right_eye           = torch.eye(Ac)
+
+        # Create left and right multiplication matrices. 
+        self.left_mat       = torch.cat([x.view(1, -1).repeat([Br, 1]) for x in left_eye], dim=0)
+        self.right_mat      = torch.cat([x.view(-1, 1).repeat([1, Bc]) for x in right_eye], dim=1)
    
-        # Initialise left- and right-multiplication matrices. 
-        self.left_mat       = torch.FloatTensor(*left_mat_shape).fill_(0)
-        self.right_mat      = torch.FloatTensor(*right_mat_shape).fill_(0)
-   
-        # Set 1s at the appropriate locations for the left-multiplication matrix. 
-        for i in range(ratio_left):
-            sr              = i * Br
-            er              = sr + Br
-    
-            self.left_mat[sr:er, i]  = 1
-        
-        # Set 1s at the appropriate locations for the right-multiplication matrix. 
-        for j in range(ratio_right):
-            sc              = j * Bc
-            ec              = sc + Bc
-            self.right_mat[j, sc:ec] = 1
+        # Unsqueeze the batch dimension.
+        self.left_mat       = self.left_mat.unsqueeze(0)
+        self.right_mat      = self.right_mat.unsqueeze(0)
 
         # Function to expand A as required by the Kronecker Product. 
-        self.A_expander     = lambda A: torch.mm(self.left_mat, torch.mm(A, self.right_mat))
+        self.A_expander     = lambda A: torch.bmm(self.left_mat.expand(A.size(0),-1,-1), torch.bmm(A, self.right_mat.expand(A.size(0),-1,-1)))
 
         # Function to tile B as required by the kronecker product. 
-        self.B_tiler        = lambda B: B.repeat([Ar, Ac])
+        self.B_tiler        = lambda B: B.repeat([1, Ar, Ac])
 
     def cuda(self):
         """
