@@ -16,11 +16,7 @@ class Model(nn.Module):
         self.B_shape    = B_shape
 
         self.kronecker  = KroneckerProduct(A_shape[1:], B_shape[1:])
-        self.A          = nn.Parameter(data=torch.FloatTensor(*A_shape).random_())
-
-    def set_to_cuda(self):
-        self.cuda()
-        self.kronecker.cuda()
+        self.register_parameter('A', nn.Parameter(torch.FloatTensor(*A_shape).random_() % 100))
 
     def forward(self, B):
         return self.kronecker(self.A, B)
@@ -38,7 +34,7 @@ def main():
     C_target        = kronecker(A_target, B)
 
     model           = Model(A_shape, B_shape)
-    model.set_to_cuda()
+    model.cuda()
 
     optimiser       = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9, weight_decay=5e-4)
 
