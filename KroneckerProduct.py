@@ -12,8 +12,6 @@ class KroneckerProduct(nn.Module):
 
     Usage: 
       * Initialise an instance of this class by specifying the shapes of A and B. 
-      * OPTIONAL: If A and B are supposed to be cuda tensors, .cuda() for this class
-        can be called. 
       * Call the class on A and B, which calls the forward function.
     """
     def __init__(self, A_shape, B_shape):
@@ -42,18 +40,18 @@ class KroneckerProduct(nn.Module):
         right_eye           = torch.eye(Ac)
 
         # Create left and right multiplication matrices. 
-        self.register_buffer('left_mat', torch.cat([x.view(1, -1).repeat([Br, 1]) for x in left_eye], dim=0))
-        self.register_buffer('right_mat', torch.cat([x.view(-1, 1).repeat([1, Bc]) for x in right_eye], dim=1))
+        self.register_buffer('left_mat', torch.cat([x.view(1, -1).repeat(Br, 1) for x in left_eye], dim=0))
+        self.register_buffer('right_mat', torch.cat([x.view(-1, 1).repeat(1, Bc) for x in right_eye], dim=1))
    
         # Unsqueeze the batch dimension.
         self.left_mat       = self.left_mat.unsqueeze(0)
         self.right_mat      = self.right_mat.unsqueeze(0)
 
         # Function to expand A as required by the Kronecker Product. 
-        self.A_expander     = lambda A: torch.bmm(self.left_mat.expand(A.size(0),-1,-1), torch.bmm(A, self.right_mat.expand(A.size(0),-1,-1)))
+        self.A_expander     = lambda A: torch.bmm(self.left_mat.expand(A.size(0),Fr,Ar), torch.bmm(A, self.right_mat.expand(A.size(0),Ac,Fc)))
 
         # Function to tile B as required by the kronecker product. 
-        self.B_tiler        = lambda B: B.repeat([1, Ar, Ac])
+        self.B_tiler        = lambda B: B.repeat(1, Ar, Ac)
 
     def forward(self, A, B):
         """
