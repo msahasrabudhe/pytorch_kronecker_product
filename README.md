@@ -34,3 +34,7 @@ kprod = kronecker(A, B)
 In the current version, the shapes of the two matrices must be specified while 
 initialising the module. This can, however, be easily extended to a version which 
 does not require specifying matrix sizes, albeit, at the cost of extra computation. 
+
+
+### Remarks
+Tested with PyTorch `0.4.0` and `1.0.1`. 
