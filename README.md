@@ -17,8 +17,8 @@ B_shape = (1, 2, 3)
 kronecker = KroneckerProduct(A_shape[1:], B_shape[1:])
 
 # Initialise A and B randomly. 
-A = torch.FloatTensor(*A_shape).random_() % 100
-B = torch.FloatTensor(*B_shape).random_() % 100
+A = torch.randn(*A_shape)
+B = torch.randn(*B_shape)
 
 # OPTIONAL: GPU usage. 
 kronecker = kronecker.cuda()
