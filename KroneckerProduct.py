@@ -42,8 +42,8 @@ class KroneckerProduct(nn.Module):
         right_eye           = torch.eye(Ac)
 
         # Create left and right multiplication matrices. 
-        self.left_mat       = torch.cat([x.view(1, -1).repeat([Br, 1]) for x in left_eye], dim=0)
-        self.right_mat      = torch.cat([x.view(-1, 1).repeat([1, Bc]) for x in right_eye], dim=1)
+        self.register_buffer('left_mat', torch.cat([x.view(1, -1).repeat([Br, 1]) for x in left_eye], dim=0))
+        self.register_buffer('right_mat', torch.cat([x.view(-1, 1).repeat([1, Bc]) for x in right_eye], dim=1))
    
         # Unsqueeze the batch dimension.
         self.left_mat       = self.left_mat.unsqueeze(0)
@@ -54,14 +54,6 @@ class KroneckerProduct(nn.Module):
 
         # Function to tile B as required by the kronecker product. 
         self.B_tiler        = lambda B: B.repeat([1, Ar, Ac])
-
-    def cuda(self):
-        """
-        Override the native cuda method.
-        """
-        self.left_mat       = self.left_mat.cuda()
-        self.right_mat      = self.right_mat.cuda()
-        return self
 
     def forward(self, A, B):
         """
