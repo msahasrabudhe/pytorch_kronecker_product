@@ -3,6 +3,7 @@ from torch import nn
 from torch import optim
 from KroneckerProduct import *
 import sys
+from torch.autograd import Variable
 
 def write_flush(text, stream=sys.stdout):
     stream.write(text)
@@ -16,7 +17,7 @@ class Model(nn.Module):
         self.B_shape    = B_shape
 
         self.kronecker  = KroneckerProduct(A_shape[1:], B_shape[1:])
-        self.register_parameter('A', nn.Parameter(torch.FloatTensor(*A_shape).random_() % 100))
+        self.register_parameter('A', nn.Parameter(torch.randint(100, size=A_shape).float()))
 
     def forward(self, B):
         return self.kronecker(self.A, B)
@@ -36,7 +37,7 @@ def main():
     model           = Model(A_shape, B_shape)
     model.cuda()
 
-    optimiser       = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9, weight_decay=5e-4)
+    optimiser       = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9)
 
     n_epochs        = 4000
     
